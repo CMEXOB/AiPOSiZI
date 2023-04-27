@@ -19,7 +19,7 @@ import java.util.Set;
 )
 public class Server implements Runnable{
 
-    private static String storePath = "repository\\store\\";
+    private String storePath = "repository\\store\\";
     private String logsPath = "repository\\logs\\";
     private static Socket socket;
     private static ServerSocket serverSocket;
@@ -67,20 +67,20 @@ public class Server implements Runnable{
                 Socket socket = serverSocket.accept();
 
                 BufferedReader inputStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                StringBuilder stringBuffer = new StringBuilder();
+                StringBuilder stringBuilder = new StringBuilder();
 
 
                 String inputLine;
                 while ((inputLine = inputStream.readLine()) != null) {
-                    stringBuffer.append(inputLine);
-                    stringBuffer.append("\r\n");
+                    stringBuilder.append(inputLine);
+                    stringBuilder.append("\r\n");
                     if(inputLine.equals("")  || inputLine.equals("\r"))  break;
                 }
                 while (inputStream.ready() && (inputLine = inputStream.readLine()) != null) {
-                    stringBuffer.append(inputLine);
-                    stringBuffer.append("\r\n");
+                    stringBuilder.append(inputLine);
+                    stringBuilder.append("\r\n");
                 }
-                Request request = Request.createRequest(stringBuffer);
+                Request request = Request.createRequest(stringBuilder);
                 Response response = handleRequest(request);
 
                 date = new Date();
@@ -121,8 +121,8 @@ public class Server implements Runnable{
     public Response handleRequest(Request request) throws IOException {
         Response response = new Response("HTTP/1.1", 200);
 
-        response.setAccessControlAllowOrigin(String.format("%s:%s", host, port));
-        response.setAccessControlAllowMethods("GET, POST, OPTIONS");
+        response.addHeader("Access-Control-Allow-Origin", String.format("%s:%s", host, port));
+        response.addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
 
         if(request.getMethod().equals("POST")){
             BufferedWriter writer = new BufferedWriter(new FileWriter(storePath + request.getUrl()));

@@ -5,33 +5,20 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Response {
+public class Response extends Http{
     private String version;
     private Integer status;
-    private String accessControlAllowOrigin; //Access-Control-Allow-Origin
-    private String accessControlAllowMethods; //Access-Control-Allow-Methods
-    private StringBuilder content;
 
     public Response(String version, Integer status) {
         this.version = version;
         this.status = status;
-        accessControlAllowOrigin = "localhost:8080";
-        accessControlAllowMethods = "GET, POST, OPTIONS";
-        content = new StringBuilder();
-    }
-
-    public void addContent(String content){
-        this.content.append(content);
     }
 
     @Override
     public String toString() {
-        String result = version + " " + status + "\r\n" +
-                "Access-Control-Allow-Origin: http://" + accessControlAllowOrigin + "\r\n" +
-                "Access-Control-Allow-Methods: " + accessControlAllowMethods + "\r\n";
-        if(content.length() != 0){
-            result += "\r\n" + content;
-        }
-        return result;
+        StringBuilder result = new StringBuilder();
+        result.append(String.format("%s %s\r\n", version, status));
+        result.append(super.toString());
+        return result.toString();
     }
 }

@@ -33,6 +33,7 @@ public class Client implements Runnable{
     private String filename = null;
     private String userAgent = "CMEXOB";
     private String accept = "text/plain";
+    private String contentType = "text/plain";
     private String acceptEncoding = "utf-8";
     @Option(names = { "--help" }, usageHelp = true, description = "display a help message")
     private boolean helpRequested;
@@ -47,26 +48,21 @@ public class Client implements Runnable{
         if(filename != null){
             try {
                 BufferedReader inputStream = new BufferedReader(new FileReader(filename));
-                StringBuilder stringBuffer = new StringBuilder();
+                StringBuilder stringRequest = new StringBuilder();
 
                 String inputLine;
                 while ((inputLine = inputStream.readLine()) != null) {
-                    stringBuffer.append(inputLine);
-                    stringBuffer.append("\r\n");
+                    stringRequest.append(inputLine);
+                    stringRequest.append("\r\n");
                     if(inputLine.equals("")  || inputLine.equals("\r"))  break;
                 }
                 while (inputStream.ready() && (inputLine = inputStream.readLine()) != null) {
-                    stringBuffer.append(inputLine);
-                    stringBuffer.append("\r\n");
+                    stringRequest.append(inputLine);
+                    stringRequest.append("\r\n");
                 }
-                try {
-                    request = Request.createRequest(stringBuffer);
-                    connect(request);
-                }
-                catch (IOException e){
-                    String log = String.format("Unsuitable request template %s", filename);
-                    System.out.println(log);
-                }
+                request = Request.createRequest(stringRequest);
+                connect(request);
+
             }
             catch (Exception e){
                 String log = String.format("Can't find file %s", filename);
@@ -76,10 +72,11 @@ public class Client implements Runnable{
         else if(method != null && url != null){
             request = new Request(method, "\\" + url, "HTTP/1.1");
             request.addContent(content +"\n");
-            request.setHost(String.format("%s:%s",host, port));
-            request.setUserAgent(userAgent);
-            request.setAccept(accept);
-            request.setAcceptEncoding(acceptEncoding);
+            request.addHeader("Host", String.format("%s:%s",host, port));
+            request.addHeader("User-Agent", userAgent);
+            request.addHeader("Accept", accept);
+            request.addHeader("Accept-Encoding", acceptEncoding);
+            request.addHeader("Content-Type", contentType);
             connect(request);
         }
         else{
@@ -113,7 +110,7 @@ public class Client implements Runnable{
             out.close();
         }
         catch (ConnectException | UnknownHostException e) {
-            String log = String.format("Can't connect to %s", request.getHost());
+            String log = String.format("Can't connect to %s", request.getHeaders().get("Host"));
             System.out.println(log);
         }
         catch (IOException e) {
