@@ -1,0 +1,23 @@
+version: '3.1'
+services:
+  app:
+    container_name: spring-app-factory-env
+    image: spring-app-factory-env
+    build: ./
+    ports:
+      - "8080:8080"
+    environment:
+      - PG_PASSWORD=postgres
+      - PG_USER=postgres
+      - PG_DB=employeedb
+      - PG_DB_URL=jdbc:postgresql://pdb:5432/employeedb
+    depends_on:
+      - pdb
+  pdb:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=employeedb
