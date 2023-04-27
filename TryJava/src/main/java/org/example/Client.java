@@ -59,8 +59,14 @@ public class Client implements Runnable{
                     stringBuffer.append(inputLine);
                     stringBuffer.append("\r\n");
                 }
-                request = Request.createRequest(stringBuffer);
-                connect(request);
+                try {
+                    request = Request.createRequest(stringBuffer);
+                    connect(request);
+                }
+                catch (IOException e){
+                    String log = String.format("Unsuitable request template %s", filename);
+                    System.out.println(log);
+                }
             }
             catch (Exception e){
                 String log = String.format("Can't find file %s", filename);

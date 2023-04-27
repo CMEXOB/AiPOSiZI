@@ -7,6 +7,11 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Command(
         name="Server.jar",
@@ -24,12 +29,15 @@ public class Server implements Runnable{
     private String host = "localhost";
     @Option(names = {"-p", "--port"}, description = "server port")
     private Integer port = 8080;
+    @Option(names = {"-l", "--log"}, description = "log file")
     private String logFile = "log.txt";
     @Option(names = { "--help" }, usageHelp = true, description = "display a help message")
     private boolean helpRequested;
+    private Set<String> methods = new HashSet<>(Arrays.asList("GET","HEAD","POST","PUT","DELETE","CONNECT","OPTIONS","TRACE","PATCH"));;
 
 
     public static void main(String[] args) throws IOException {
+
         File theDir = new File("repository/store");
         if (!theDir.exists()){
             theDir.mkdirs();
@@ -44,10 +52,14 @@ public class Server implements Runnable{
     @Override
     public void run(){
         String log;
+        String fullLog;
+        SimpleDateFormat format = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
+        Date date;
         try {
             BufferedWriter logWriter = new BufferedWriter(new FileWriter(logsPath + logFile));
             ServerSocket serverSocket = new ServerSocket(port);
-            log = String.format("INFO - Server work on %s:%s", host, port);
+            date = new Date();
+            log = String.format("%s INFO - Server work on %s:%s", format.format(date), host, port);
             System.out.println(log);
             logWriter.write(log);
             logWriter.newLine();
@@ -70,10 +82,15 @@ public class Server implements Runnable{
                 }
                 Request request = Request.createRequest(stringBuffer);
                 Response response = handleRequest(request);
-                log = String.format("INFO - %s %s %s %s", request.getMethod(), request.getUrl(), response.getVersion(), response.getStatus());
+
+                date = new Date();
+                log = String.format("%s INFO - %s %s %s %s", format.format(date), request.getMethod(), request.getUrl(), response.getVersion(), response.getStatus());
                 System.out.println(log);
                 logWriter.write(log);
+                fullLog = String.format("\r\n--Request--\r\n%s--Request--\r\n--Response--\r\n%s--Response--\r\n", request, response);
+                logWriter.write(fullLog);
                 logWriter.newLine();
+
 
                 OutputStream outStream = socket.getOutputStream();
 
@@ -89,7 +106,8 @@ public class Server implements Runnable{
 
                 socket.close();
 
-                log = String.format("INFO - Connection %s:%s closed", socket.getInetAddress(), socket.getPort());
+                date = new Date();
+                log = String.format("%s INFO - Connection %s:%s closed", format.format(date), socket.getInetAddress(), socket.getPort());
                 System.out.println(log);
                 logWriter.write(log);
                 logWriter.newLine();
@@ -100,14 +118,16 @@ public class Server implements Runnable{
             e.printStackTrace();
         }
     }
-    public static Response handleRequest(Request request) throws IOException {
-        Response response = null;
+    public Response handleRequest(Request request) throws IOException {
+        Response response = new Response("HTTP/1.1", 200);
+
+        response.setAccessControlAllowOrigin(String.format("%s:%s", host, port));
+        response.setAccessControlAllowMethods("GET, POST, OPTIONS");
+
         if(request.getMethod().equals("POST")){
             BufferedWriter writer = new BufferedWriter(new FileWriter(storePath + request.getUrl()));
             writer.write(request.getContent().toString());
             writer.close();
-
-            response = new Response("HTTP/1.1", 200);
         }
         else if(request.getMethod().equals("GET")){
             try {
@@ -120,15 +140,20 @@ public class Server implements Runnable{
                 }
                 reader.close();
 
-                response = new Response("HTTP/1.1", 200);
                 response.addContent(sb.toString());
             }
             catch (FileNotFoundException e){
-                response = new Response("HTTP/1.1", 404);
+                response.setStatus(404);
             }
         }
         else if(request.getMethod().equals("OPTIONS")){
 
+        }
+        else if(methods.contains(request.getMethod())){
+            response.setStatus(405);
+        }
+        else{
+            response.setStatus(400);
         }
         return response;
     }

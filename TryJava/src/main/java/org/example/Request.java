@@ -26,24 +26,11 @@ public class Request {
         content = new StringBuilder();
     }
 
-    public void readFile(String fileName) throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(fileName));
-        while (reader.ready()){
-            content.append(reader.read());
-        }
-        reader.close();
-    }
-
     public void addContent(String content){
         this.content.append(content);
     }
 
-    public String getStartLine(){
-        String result = method + " " + url + " " + version;
-        return result;
-    }
-
-    public static Request createRequest(StringBuilder builder){
+    public static Request createRequest(StringBuilder builder) throws IOException {
         String str[] = builder.toString().split("\r\n");
         String s[] = str[0].split(" ");
         Request request = new Request(s[0], s[1], s[2]);
@@ -54,6 +41,9 @@ public class Request {
             }
             else if(headers) {
                 s = str[index].split(": ");
+                if(s[1].equals("")){
+                    throw new IOException();
+                }
                 if (s[0].equals("Accept")) {
                     request.setAccept(s[1]);
                 }
@@ -65,6 +55,9 @@ public class Request {
                 }
                 else if (s[0].equals("User-Agent")) {
                     request.setUserAgent(s[1]);
+                }
+                else {
+                    throw new IOException();
                 }
             }
             else {

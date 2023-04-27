@@ -27,7 +27,7 @@ public class Response {
     @Override
     public String toString() {
         String result = version + " " + status + "\r\n" +
-                "Access-Control-Allow-Origin: " + accessControlAllowOrigin + "\r\n" +
+                "Access-Control-Allow-Origin: http://" + accessControlAllowOrigin + "\r\n" +
                 "Access-Control-Allow-Methods: " + accessControlAllowMethods + "\r\n";
         if(content.length() != 0){
             result += "\r\n" + content;
