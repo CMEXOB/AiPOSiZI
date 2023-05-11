@@ -1,0 +1,33 @@
+version: '3.1'
+services:
+  client:
+    container_name: js-client-env
+    image: js-client-env
+    build: ./
+    environment:
+      - SERVER_URL=http://server:8081
+    ports:
+      - "8080:8080"
+    depends_on:
+      - server
+  server:
+    container_name: js-server-env
+    image: spring-rest-server-env
+
+    ports:
+      - "8081:8081"
+    environment:
+      - PG_PASSWORD=postgres
+      - PG_USER=postgres
+      - PG_DB=employeedb
+      - PG_DB_URL=jdbc:postgresql://pdb1:5432/employeedb
+    depends_on:
+      - pdb1
+  pdb1:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=employeedb
